@@ -6,6 +6,7 @@ export default defineConfig(({ mode }) => {
       base: '/Hypothesis/',
     const env = loadEnv(mode, '.', '');
     return {
+              base: '/Hypothesis/',
       server: {
         port: 3000,
         host: '0.0.0.0',
