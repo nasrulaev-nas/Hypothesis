@@ -1,0 +1,5 @@
+{
+  "name": "Hypothesis AI - A/B Testing Platform",
+  "description": "SaaS платформа для A/B тестирования текстов на сайте с генерацией гипотез ИИ, проверкой фактов и отслеживанием композитных метрик.",
+  "requestFramePermissions": []
+}
