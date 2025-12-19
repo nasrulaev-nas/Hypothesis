@@ -1,19 +1,28 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  FlaskConical, 
+  BookOpenCheck, 
+  Terminal, 
+  Code2, 
+  LogOut,
+  Zap
+} from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const NavItem = ({ to, label, icon, active }: { to: string; label: string; icon: React.ReactNode; active: boolean }) => (
+const NavItem = ({ to, label, icon: Icon, active }: { to: string; label: string; icon: any; active: boolean }) => (
   <Link
     to={to}
-    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-      active ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+      active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
     }`}
   >
-    {icon}
+    <Icon size={20} />
     <span className="font-medium">{label}</span>
   </Link>
 );
@@ -24,71 +33,75 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-xl z-10">
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-              <span className="font-bold text-xl">H</span>
+      <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-xl z-10 border-r border-slate-800">
+        <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-inner">
+              <Zap size={24} className="text-white fill-current" />
             </div>
-            <span className="text-xl font-bold tracking-tight">Hypothesis AI</span>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold tracking-tight leading-none">Hypothesis</span>
+              <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-1">Intelligence</span>
+            </div>
           </div>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-4 mt-4">Платформа</div>
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-4 mt-4">Управление</div>
           <NavItem 
             to="/" 
             active={location.pathname === '/'} 
             label="Обзор" 
-            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
+            icon={LayoutDashboard}
           />
           <NavItem 
             to="/experiments" 
             active={location.pathname.startsWith('/experiments')} 
             label="Эксперименты" 
-            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>}
+            icon={FlaskConical}
           />
           
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-4 mt-6">Настройки</div>
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-4 mt-6">Конфигурация</div>
           <NavItem 
             to="/facts" 
             active={location.pathname === '/facts'} 
-            label="Факты о бизнесе" 
-            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+            label="База фактов" 
+            icon={BookOpenCheck}
           />
           <NavItem 
             to="/install" 
             active={location.pathname === '/install'} 
-            label="Установка" 
-            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
+            label="Интеграция" 
+            icon={Terminal}
           />
           
-           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-4 mt-6">Разработка</div>
+           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-4 mt-6">Для разработчиков</div>
            <NavItem 
             to="/architecture" 
             active={location.pathname === '/architecture'} 
-            label="Архитектура / API" 
-            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
+            label="Архитектура API" 
+            icon={Code2}
           />
         </nav>
 
-        <div className="p-4 bg-slate-950 border-t border-slate-800">
-            <div className="flex items-center space-x-3 mb-3">
-                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-violet-500"></div>
-                 <div className="flex flex-col">
-                    <span className="text-sm font-medium text-white">Acme Corp</span>
-                    <span className="text-xs text-slate-400">Pro Тариф</span>
+        <div className="p-4 bg-slate-950/50 border-t border-slate-800">
+            <div className="flex items-center space-x-3 mb-4 p-2 rounded-lg bg-slate-800/30">
+                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 ring-2 ring-slate-700 shadow-lg"></div>
+                 <div className="flex flex-col overflow-hidden">
+                    <span className="text-xs font-bold text-white truncate">Acme Corp</span>
+                    <span className="text-[10px] text-slate-500 font-medium">Enterprise Plan</span>
                  </div>
             </div>
-            <Link to="/welcome" className="block w-full text-center px-4 py-2 border border-slate-700 rounded text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-                Выйти из аккаунта
+            <Link to="/welcome" className="flex items-center justify-center space-x-2 w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 hover:bg-red-900/20 hover:text-red-400 hover:border-red-900/50 transition-all duration-300 group">
+                <LogOut size={14} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Выйти из кабинета</span>
             </Link>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto p-8">
+      <main className="flex-1 overflow-y-auto relative bg-[#f8fafc]">
+        <div className="max-w-7xl mx-auto p-10">
            {children}
         </div>
       </main>
