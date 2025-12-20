@@ -1,9 +1,12 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { BusinessFacts, ElementType } from "../types";
 
 // Инициализация Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("VITE_GEMINI_API_KEY не задан. Добавь его в .env.local");
+}
+const ai = new GoogleGenAI({ apiKey });
 
 const MODEL_NAME = 'gemini-3-flash-preview';
 
@@ -94,29 +97,29 @@ export const generateHypotheses = async (
 };
 
 export const validateFactCompliance = async (
-    text: string,
-    facts: BusinessFacts
+  text: string,
+  facts: BusinessFacts
 ): Promise<{ valid: boolean; issues: string[] }> => {
-     const prompt = `Проверь текст "${text}" на соответствие фактам: ${JSON.stringify(facts)}`;
+  const prompt = `Проверь текст "${text}" на соответствие фактам: ${JSON.stringify(facts)}`;
 
-     try {
-        const response = await ai.models.generateContent({
-            model: MODEL_NAME,
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                  type: Type.OBJECT,
-                  properties: {
-                      valid: { type: Type.BOOLEAN },
-                      issues: { type: Type.ARRAY, items: { type: Type.STRING } }
-                  },
-                  required: ["valid", "issues"]
-                }
-            }
-        });
-        return JSON.parse(response.text || '{"valid":true, "issues":[]}') as { valid: boolean, issues: string[] };
-     } catch (e) {
-         return { valid: true, issues: [] };
-     }
-}
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            valid: { type: Type.BOOLEAN },
+            issues: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["valid", "issues"]
+        }
+      }
+    });
+    return JSON.parse(response.text || '{"valid":true, "issues":[]}') as { valid: boolean, issues: string[] };
+  } catch (e) {
+    return { valid: true, issues: [] };
+  }
+};
