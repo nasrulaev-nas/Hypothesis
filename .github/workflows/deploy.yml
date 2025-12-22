@@ -8,8 +8,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-        env:
-              VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+    env:
+        VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
     
     steps:
       - uses: actions/checkout@v3
