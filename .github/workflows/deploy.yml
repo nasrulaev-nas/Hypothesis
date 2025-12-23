@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
-            VITE_SUPABASE_URL: ${{ secrets.DEFAULT_SUPABASE }}
-                  VITE_SUPABASE_ANON_KEY: ${{ secrets.SECRET_SUPABASE }}
+        VITE_SUPABASE_URL: ${{ secrets.DEFAULT_SUPABASE }}
+                  ABASE_ANON_KEY: ${{ secrets.SECRET_SUPABASE }}
     
     steps:
       - name: Checkout
