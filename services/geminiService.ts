@@ -3,9 +3,6 @@ import { BusinessFacts, ElementType } from "../types";
 
 // Инициализация Gemini Client
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error("VITE_GEMINI_API_KEY не задан. Добавь его в .env.local");
-}
 const ai = new GoogleGenAI({ apiKey });
 
 const MODEL_NAME = 'gemini-3-flash-preview';
