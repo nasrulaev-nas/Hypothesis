@@ -1,20 +1,33 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# Hypothesis AI - CRO Platform
 
-This contains everything you need to run your app locally.
+SaaS платформа для A/B тестирования текстов.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1TQ6GYrY2uZjOPT5WbfBOkIlb0VpVJtY9
+## Настройка автоматического деплоя (GitHub Actions)
 
-## Run Locally
+Если вы загрузили код в репозиторий, но сайт не открывается:
 
-**Prerequisites:**  Node.js
+1. **Включите GitHub Actions для Pages:**
+   - Перейдите в репозиторий на GitHub.
+   - Откройте **Settings** -> **Pages**.
+   - В разделе **Build and deployment** -> **Source** выберите **GitHub Actions** вместо "Deploy from a branch".
 
+2. **Добавьте секреты (обязательно):**
+   - Перейдите в **Settings** -> **Secrets and variables** -> **Actions**.
+   - Нажмите **New repository secret** и добавьте три ключа:
+     - `API_KEY` (Ваш ключ Gemini)
+     - `SUPABASE_URL` (URL из настроек Supabase)
+     - `SUPABASE_ANON_KEY` (Anon key из настроек Supabase)
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+3. **Запустите билд:**
+   - Перейдите во вкладку **Actions**.
+   - Выберите воркфлоу **Deploy to GitHub Pages**.
+   - Нажмите **Run workflow**.
+
+## Ручной деплой (если не работает автоматика)
+
+Если вы хотите залить изменения прямо сейчас с компьютера:
+```bash
+npm install
+npm run deploy
+```
