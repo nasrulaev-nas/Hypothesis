@@ -32,7 +32,16 @@ const Dashboard: React.FC = () => {
         setExperiments(data || []);
       } catch (e: any) {
         console.error("Ошибка загрузки данных из БД:", e);
-        setError(e.message || "Не удалось загрузить данные. Проверьте подключение к Supabase.");
+        let errorMessage = "Не удалось загрузить данные. Проверьте подключение к Supabase.";
+        if (e instanceof Error) {
+          errorMessage = e.message;
+        } else if (typeof e === 'string') {
+          errorMessage = e;
+        } else if (e && typeof e === 'object' && e.message) {
+          errorMessage = String(e.message);
+        }
+        
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -62,7 +71,7 @@ const Dashboard: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Обзор системы</h1>
           <p className="text-gray-500 mt-1">
-            {process.env.SUPABASE_URL ? 'Данные из вашей PostgreSQL' : 'Демонстрационный режим (Mocks)'}
+            Мониторинг эффективности в реальном времени
           </p>
         </div>
         <Link 
@@ -114,21 +123,23 @@ const Dashboard: React.FC = () => {
                 <div className="p-12 text-center text-gray-400">Нет активных экспериментов</div>
             ) : experiments.slice(0, 5).map(exp => (
                 <div key={exp.id} className="p-6 hover:bg-gray-50 transition-colors cursor-pointer group">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-start space-x-4">
-                            <div className={`mt-1 w-2.5 h-2.5 rounded-full ${exp.status === 'RUNNING' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-300'}`}></div>
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{exp.name}</h3>
-                                <p className="text-xs text-gray-500 mt-1">{exp.element_type} • {exp.url_pattern}</p>
+                    <Link to={`/experiments/${exp.id}`} className="block">
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-start space-x-4">
+                                <div className={`mt-1 w-2.5 h-2.5 rounded-full ${exp.status === 'RUNNING' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-300'}`}></div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{exp.name}</h3>
+                                    <p className="text-xs text-gray-500 mt-1">{exp.element_type || exp.elementType} • {exp.url_pattern || exp.urlPattern}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">{exp.status}</div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                    {exp.created_at ? new Date(exp.created_at).toLocaleDateString() : '—'}
+                                </div>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">{exp.status}</div>
-                            <div className="text-xs text-gray-400 mt-1">
-                                {exp.created_at ? new Date(exp.created_at).toLocaleDateString() : '—'}
-                            </div>
-                        </div>
-                    </div>
+                    </Link>
                 </div>
             ))}
         </div>

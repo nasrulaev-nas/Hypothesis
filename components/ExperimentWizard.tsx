@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { ElementType } from '../types';
+
+import React, { useState, useEffect } from 'react';
+import { ElementType, ExperimentStatus } from '../types';
 import { generateHypotheses } from '../services/geminiService';
-import { MOCK_FACTS } from '../services/mockStore';
+import { db } from '../services/supabase';
 
 // Simulated website content for the Visual Editor
 const VISUAL_MOCK_HTML = (
@@ -70,7 +71,21 @@ const ExperimentWizard: React.FC = () => {
     const [selectedElement, setSelectedElement] = useState<{selector: string, text: string, type: ElementType} | null>(null);
     const [hypotheses, setHypotheses] = useState<Array<{text: string, reasoning: string}>>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLaunching, setIsLaunching] = useState(false);
     const [selectedHypothesis, setSelectedHypothesis] = useState<number | null>(null);
+    const [facts, setFacts] = useState<any>(null);
+
+    useEffect(() => {
+        async function loadFacts() {
+            try {
+                const f = await db.facts.getByProject('p-1');
+                setFacts(f);
+            } catch (error) {
+                console.error("Failed to load facts:", error);
+            }
+        }
+        loadFacts();
+    }, []);
 
     // Step 1: Visual Selector
     const handleElementClick = (e: React.MouseEvent) => {
@@ -89,7 +104,7 @@ const ExperimentWizard: React.FC = () => {
 
     // Step 2: AI Generation
     const handleGenerate = async () => {
-        if (!selectedElement) return;
+        if (!selectedElement || !facts) return;
         setIsLoading(true);
         setStep(2);
         
@@ -97,7 +112,7 @@ const ExperimentWizard: React.FC = () => {
             const result = await generateHypotheses(
                 selectedElement.text,
                 selectedElement.type,
-                MOCK_FACTS
+                facts
             );
             setHypotheses(result.hypotheses);
         } catch (error) {
@@ -108,23 +123,53 @@ const ExperimentWizard: React.FC = () => {
         }
     };
 
-    // Step 3: Confirmation (Mock)
-    const handleLaunch = () => {
-        setStep(3);
-        // Here we would post to API
+    // Step 3: Launch
+    const handleLaunch = async () => {
+        if (selectedHypothesis === null || !selectedElement) return;
+        setIsLaunching(true);
+
+        const newExperiment = {
+            projectId: 'p-1',
+            name: `Оптимизация ${selectedElement.type} на Главной`,
+            url_pattern: '/',
+            selector: selectedElement.selector,
+            element_type: selectedElement.type,
+            original_text: selectedElement.text,
+            status: ExperimentStatus.RUNNING,
+            variants: [
+                { id: 'v-control', name: 'Контроль (A)', content: selectedElement.text, isControl: true, trafficSplit: 50 },
+                { id: 'v-b', name: 'Вариант Б (AI)', content: hypotheses[selectedHypothesis].text, isControl: false, trafficSplit: 50 }
+            ],
+            stats: {
+                visitors: 0,
+                conversions: 0,
+                compositeScore: 0,
+                confidence: 0
+            }
+        };
+
+        try {
+            await db.experiments.create(newExperiment);
+            setStep(3);
+        } catch (error) {
+            console.error("Failed to launch experiment:", error);
+            alert("Ошибка при сохранении эксперимента в БД");
+        } finally {
+            setIsLaunching(false);
+        }
     };
 
     if (step === 3) {
         return (
             <div className="flex flex-col items-center justify-center h-96 text-center">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Эксперимент запущен!</h2>
                 <p className="text-gray-500 max-w-md mb-6">
-                    "Оптимизация {selectedElement?.type}" теперь активна. Мы собираем данные и сообщим вам, когда будет достигнута статистическая значимость.
+                    Эксперимент теперь активен в базе данных. Мы начинаем распределять трафик и собирать метрики.
                 </p>
-                <a href="#/" className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Вернуться в обзор</a>
+                <a href="#/experiments" className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md transition-all">Смотреть список тестов</a>
             </div>
         );
     }
@@ -141,7 +186,7 @@ const ExperimentWizard: React.FC = () => {
             <div className="flex-1 flex gap-6 min-h-0">
                 {/* Left Panel: Preview / Editor */}
                 <div 
-                    className={`flex-1 overflow-auto transition-opacity ${isLoading ? 'opacity-50' : 'opacity-100'}`}
+                    className={`flex-1 overflow-auto transition-opacity ${isLoading || isLaunching ? 'opacity-50' : 'opacity-100'}`}
                     onClick={step === 1 ? handleElementClick : undefined}
                 >
                     {VISUAL_MOCK_HTML}
@@ -166,10 +211,11 @@ const ExperimentWizard: React.FC = () => {
                                 {step === 1 && (
                                     <button 
                                         onClick={handleGenerate}
-                                        className="w-full mt-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-2 rounded-lg font-medium shadow hover:shadow-lg transition-all flex justify-center items-center"
+                                        disabled={isLoading}
+                                        className="w-full mt-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-2 rounded-lg font-medium shadow hover:shadow-lg transition-all flex justify-center items-center disabled:opacity-50"
                                     >
                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                        Сгенерировать гипотезы
+                                        {isLoading ? 'Генерация...' : 'Сгенерировать гипотезы'}
                                     </button>
                                 )}
                             </div>
@@ -204,11 +250,16 @@ const ExperimentWizard: React.FC = () => {
                             )}
                             
                             <button 
-                                disabled={selectedHypothesis === null}
+                                disabled={selectedHypothesis === null || isLaunching}
                                 onClick={handleLaunch}
-                                className="w-full mt-6 bg-green-600 disabled:bg-gray-300 text-white py-3 rounded-lg font-medium shadow hover:bg-green-700 transition-colors"
+                                className="w-full mt-6 bg-green-600 disabled:bg-gray-300 text-white py-3 rounded-lg font-medium shadow hover:bg-green-700 transition-colors flex justify-center items-center"
                             >
-                                Запустить эксперимент
+                                {isLaunching ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Запуск...
+                                    </>
+                                ) : 'Запустить эксперимент'}
                             </button>
                         </div>
                     )}

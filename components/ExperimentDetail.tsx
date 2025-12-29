@@ -1,12 +1,38 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MOCK_EXPERIMENTS, generateMockAnalytics } from '../services/mockStore';
+import { db } from '../services/supabase';
+import { generateMockAnalytics } from '../services/mockStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const ExperimentDetail: React.FC = () => {
-    // In a real app we use the ID, but here we just grab the first one for demo
-    const experiment = MOCK_EXPERIMENTS[0]; 
-    const data = generateMockAnalytics(14); // 2 weeks data
+    const { id } = useParams<{ id: string }>();
+    const [experiment, setExperiment] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const data = generateMockAnalytics(14); // Keep chart as mock for visualization unless real data table exists
+
+    useEffect(() => {
+        async function loadExperiment() {
+            if (!id) return;
+            try {
+                const exp = await db.experiments.getById(id);
+                setExperiment(exp);
+            } catch (error) {
+                console.error("Error loading experiment:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadExperiment();
+    }, [id]);
+
+    if (isLoading) {
+        return <div className="p-12 text-center text-gray-500 animate-pulse">Загрузка данных эксперимента...</div>;
+    }
+
+    if (!experiment) {
+        return <div className="p-12 text-center text-red-500">Эксперимент не найден</div>;
+    }
 
     return (
         <div className="space-y-8">
@@ -20,9 +46,11 @@ const ExperimentDetail: React.FC = () => {
                     <h1 className="text-3xl font-bold text-gray-900">{experiment.name}</h1>
                 </div>
                 <div className="flex items-center space-x-3">
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Активен</span>
-                    <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">Пауза</button>
-                    <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">Выбрать победителя</button>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${experiment.status === 'RUNNING' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {experiment.status === 'RUNNING' ? 'Активен' : experiment.status}
+                    </span>
+                    <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors">Пауза</button>
+                    <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm transition-all">Выбрать победителя</button>
                 </div>
             </div>
 
@@ -30,20 +58,20 @@ const ExperimentDetail: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm">Всего посетителей</p>
-                    <p className="text-2xl font-bold">{experiment.stats.visitors.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">{(experiment.stats?.visitors || 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm">Конверсии</p>
-                    <p className="text-2xl font-bold">{experiment.stats.conversions}</p>
+                    <p className="text-2xl font-bold">{experiment.stats?.conversions || 0}</p>
                 </div>
                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm">Сводный балл</p>
-                    <p className="text-2xl font-bold text-indigo-600">{experiment.stats.compositeScore}</p>
+                    <p className="text-2xl font-bold text-indigo-600">{experiment.stats?.compositeScore || 0}</p>
                     <p className="text-xs text-gray-400">Взвеш. (Конв. + Клики)</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm">Достоверность</p>
-                    <p className="text-2xl font-bold text-green-600">{(experiment.stats.confidence * 100).toFixed(1)}%</p>
+                    <p className="text-2xl font-bold text-green-600">{( (experiment.stats?.confidence || 0) * 100).toFixed(1)}%</p>
                     <p className="text-xs text-gray-400">Байесовская вероятность</p>
                 </div>
             </div>
@@ -69,9 +97,9 @@ const ExperimentDetail: React.FC = () => {
             </div>
 
             {/* Variants Comparison */}
-            <div className="grid grid-cols-2 gap-6">
-                {experiment.variants.map((v, i) => (
-                    <div key={v.id} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(experiment.variants || []).map((v: any, i: number) => (
+                    <div key={v.id || i} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
                         {v.isControl ? (
                             <div className="absolute top-0 right-0 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-bl">Контроль</div>
                         ) : (
@@ -83,7 +111,7 @@ const ExperimentDetail: React.FC = () => {
                         </div>
                         <div className="mt-4 flex justify-between items-center text-sm">
                             <span className="text-gray-500">Трафик: {v.trafficSplit}%</span>
-                            {!v.isControl && <span className="text-green-600 font-bold">+12.4% Прирост</span>}
+                            {!v.isControl && experiment.stats?.visitors > 0 && <span className="text-green-600 font-bold">+12.4% Прирост</span>}
                         </div>
                     </div>
                 ))}
