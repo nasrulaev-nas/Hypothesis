@@ -2,10 +2,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { BusinessFacts, ElementType } from "../types";
 
-// Инициализация Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Fix: Correctly initialize GoogleGenAI with named parameter and process.env.API_KEY directly
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const MODEL_NAME = 'gemini-3-flash-preview';
+// Using gemini-3-pro-preview for complex text tasks (advanced reasoning for CRO)
+const MODEL_NAME = 'gemini-3-pro-preview';
 
 interface HypothesisResponse {
   hypotheses: Array<{
